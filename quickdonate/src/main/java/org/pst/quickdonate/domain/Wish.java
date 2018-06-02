@@ -11,18 +11,22 @@ public class Wish {
 	private double amount;
 	private boolean isActive = true;
 	private boolean isFulfilled = false;
+	private String donorAadharId;
 	
 	public Wish() {
 	}
 	
-	public Wish(String id, String message, String beneficiaryAadharId, Account beneficiaryAccount, double amount, boolean isActive, boolean isFulfilled) {
+	public Wish(String id, String message, String beneficiaryName, String beneficiaryAadharId, 
+			Account beneficiaryAccount, double amount, boolean isActive, boolean isFulfilled, String donorAadharId) {
 		this.id = id;
 		this.message = message;
+		this.beneficiaryName = beneficiaryName;
 		this.beneficiaryAadharId = beneficiaryAadharId;
 		this.beneficiaryAccount = beneficiaryAccount;
 		this.amount = amount;
 		this.isActive = isActive;
 		this.isFulfilled = isFulfilled;
+		this.donorAadharId = donorAadharId;
 	}
 
 	public String getId() {
@@ -37,12 +41,15 @@ public class Wish {
 	public void setMessage(String message) {
 		this.message = message;
 	}
+	
 	public String getBeneficiaryName() {
 		return beneficiaryName;
 	}
+
 	public void setBeneficiaryName(String beneficiaryName) {
 		this.beneficiaryName = beneficiaryName;
 	}
+
 	public String getBeneficiaryAadharId() {
 		return beneficiaryAadharId;
 	}
@@ -73,5 +80,12 @@ public class Wish {
 	}
 	public void setIsFulfilled(boolean isFulfilled) {
 		this.isFulfilled = isFulfilled;
+	}
+	public String getDonorAadharId() {
+		return donorAadharId;
+	}
+
+	public void setDonorAadharId(String donorAadharId) {
+		this.donorAadharId = donorAadharId;
 	}
 }
