@@ -80,7 +80,9 @@
                     <div data-form-alert="" hidden="">
                         Thanks for filling out the form!
                     </div>
-            
+            		<div>
+            			<p ng-show="wishCtrl.error.isError" class="error">{{wishCtrl.error.message}}</p>
+            		</div>
                     <div  class="row row-sm-offset">
                         <div class="col-md-4 multi-horizontal" data-for="name">
                             <div class="form-group">
@@ -112,7 +114,7 @@
                         <textarea type="text" class="form-control" name="message" rows="7" data-form-field="Message" id="message-form1-k" ng-model="wishCtrl.wish.message"></textarea>
                     </div>
             
-                    <span class="input-group-btn"><button href="" type="submit" class="btn btn-primary btn-form display-4" ng-click="wishCtrl.createWish(wishCtrl.wish)">Submit</button></span>
+                    <span class="input-group-btn"><button href="" type="submit" class="btn btn-primary btn-form display-4" ng-click="wishCtrl.authenticate('creating', wishCtrl.wish)">Submit</button></span>
             </div>
         </div>
     </div>
