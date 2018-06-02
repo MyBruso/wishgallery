@@ -2701,3 +2701,13 @@ body {
   text-align: center;
   color: #565656;
 }
+.error {
+  text-align: center;
+  color: #ff0000;
+  font-weight: 900;
+}
+
+.donor {
+	color: #565656;
+  	font-weight: 900;
+}
