@@ -1,45 +1,18 @@
 (function(){
 	angular.module("QuickDonate", [])
-			.controller("UserController", UserController)
 			.controller("WishController", WishController)
-			.service("UserService", UserService)
 			.service("WishService", WishService);
-	
-	
-	UserController.$inject = ['UserService'];
-	function UserController(UserService) {
-		var userCtrl = this;
-		userCtrl.search = function(id) {
-			var promise = UserService.search(id);
-			promise.then(function(result){
-				userCtrl.user = result;
-			}).catch(function(error){
-				console.log("UserService could not get a User record " + error);
-			});
-		}
-	}
-	
-	UserService.$inject = ['$http'];
-	function UserService($http) {
-		var userService = this;
-		
-		userService.search = function(id) {
-			var response = $http({
-				method : 'GET',
-				url : ('http://localhost:8080/quickdonate/application/user/' + id)
-			}).then(function(result){
-				var user = result.data; 
-				return user;
-			});
-			return response;
-		};
-	}
 	
 	WishController.$inject = ['WishService'];
 	function WishController(WishService) {
 		var wishCtrl = this;
 		wishCtrl.showEditForm = false;
-		wishCtrl.wishes = []; 
+		wishCtrl.showDonorAadharIdForm = false;
+		wishCtrl.wishes = [];
+		wishCtrl.error = {
+				isError : false,
+				message : ""
+		};
 		getWishes();
 		
 		function getWishes() {
@@ -58,6 +31,70 @@
 			};
 		}
 		
+		wishCtrl.getWishes = function() {
+			getWishes();
+		};
+		
+		wishCtrl.performOperation = function(operation, wish) {
+			switch(operation) {
+				case "creating" : wishCtrl.createWish(wish);
+								break;
+				case "updating" : wishCtrl.createWish(wish);
+								  break;
+				case "deleting" : wishCtrl.deleteWish(wish.id);
+								break;
+				case "fulfilling" : wishCtrl.fulfillWish(wish);
+								break;
+				default : console.log("Invalid operation in wish gallery!");
+			}
+		}
+		
+		wishCtrl.authenticate = function(operation, wish) {
+			wishCtrl.error.isError = false;
+			var authenticationObject = {};
+			if (operation === 'fulfilling') {
+				authenticationObject = {
+						  "aadhaar_id" : wish.donorAadharId,
+						  "otp" : "123456",
+						  "txn_id" : "547039586626" 
+						};
+			} else {
+				authenticationObject = {
+						  "aadhaar_id" : wish.beneficiaryAadharId,
+						  "otp" : "123456",
+						  "txn_id" : "547039586626" 
+						};
+			} 
+			var promise = WishService.authenticateWish(authenticationObject, wish);
+			promise.then(function(result){
+				console.log("Beneficiary/Donor is authenticated using Aadhar AUTH API for operation " + operation);
+				wishCtrl.performOperation(operation, wish);
+			}).catch(function(error){
+				if (error.data.code == 'REQUEST_VALIDATION_FAILED') {
+					wishCtrl.error.isError = true;
+					wishCtrl.error.message = "Please give correct Aadhar ID while " + operation + " a wish!";
+				}
+				console.log("Error : User could not be authenticated using Aadhar AUTH API : " + error.data.code + ":" + error.data.message);
+			});
+		};
+		
+		wishCtrl.showDonorDetails = function(wish) {
+			wishCtrl.wish = {
+					id : wish.id,
+					message : wish.message,
+					amount : wish.amount,
+					beneficiaryName : wish.beneficiaryName,
+					beneficiaryAccount : {
+						virtualPaymentAddress : wish.beneficiaryAccount.virtualPaymentAddress
+					},
+					beneficiaryAadharId : wish.beneficiaryAadharId,
+					donorAadharId : wish.donorAadharId
+				};
+			wishCtrl.error.isError = false;
+			wishCtrl.showEditForm = false;
+			wishCtrl.showDonorAadharIdForm = true;
+		};
+		
 		wishCtrl.getWish = function(id) {
 			var promise = WishService.getWish(id);
 			promise.then(function(result){
@@ -65,10 +102,6 @@
 			}).catch(function(error){
 				console.log("WishService could not get a Wish record " + error);
 			});
-		};
-		
-		wishCtrl.getWishes = function() {
-			getWishes();
 		};
 		
 		wishCtrl.createWish = function(wish) {
@@ -94,7 +127,7 @@
 			wishCtrl.showEditForm = false;
 		};
 		
-		wishCtrl.updateWish = function(wish) {
+		wishCtrl.showWish = function(wish) {
 			wishCtrl.wish = {
 				id : wish.id,
 				message : wish.message,
@@ -105,6 +138,8 @@
 				},
 				beneficiaryAadharId : wish.beneficiaryAadharId
 			};
+			wishCtrl.error.isError = false;
+			wishCtrl.showDonorAadharIdForm = false;
 			wishCtrl.showEditForm = true;
 		};
 		
@@ -116,6 +151,7 @@
 			}).catch(function(error){
 				console.log("WishService could not delete a Wish " + error);
 			});
+			wishCtrl.showEditForm = false;
 		};
 		
 		wishCtrl.fulfillWish = function(wish) {
@@ -133,6 +169,7 @@
 		}
 		
 		function onPaymentSuccessHandler (response) {
+			wishCtrl.showDonorAadharIdForm = false;
 			markWishAsFulfilled(wishCtrl.wish)
 			console.log('Payment Success Response', response);
 		}
@@ -141,12 +178,14 @@
 			console.log('Payment Failure Response', response);
 		}
 		
-		Instamojo.configure({
-	        handlers: {
-	          onSuccess: onPaymentSuccessHandler,
-	          onFailure: onPaymentFailureHandler
-	        }
-	    });
+		if (Instamojo != undefined) {
+			Instamojo.configure({
+		        handlers: {
+		          onSuccess: onPaymentSuccessHandler,
+		          onFailure: onPaymentFailureHandler
+		        }
+		    });
+		}
 	}
 	
 	WishService.$inject = ['$http'];
@@ -218,6 +257,16 @@
 			return response;
 		};
 		
+		wishService.authenticateWish = function(authenticationObject, wish) {
+			var response = $http({
+				method : 'POST',
+				url : ('https://ext.digio.in:444//test/otpkyc'),
+				data : authenticationObject
+			}).then(function(result){
+				return result;
+			});
+			return response;
+		};
 	}
 	
 })();
