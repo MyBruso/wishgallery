@@ -86,7 +86,7 @@
 		            	<td class="body-item mbr-fonts-style display-7">{{wish.amount}}</td>
 		            	<td>
 							<button class="btn-link" ng-click="wishCtrl.showWish(wish)" ng-disabled="wish.isFulfilled">Edit</button> | 
-							<button class="btn-link" ng-click="wishCtrl.authenticate('deleting', wish)" ng-disabled="wish.isFulfilled">Delete</button> |
+							<button class="btn-link" ng-click="wishCtrl.showWish(wish)" ng-disabled="wish.isFulfilled">Delete</button> |
 							<button class="btn-link" ng-click="wishCtrl.showDonorDetails(wish)" ng-disabled="wish.isFulfilled">Fulfill</button>
 						</td>
 		            </tr>
@@ -150,7 +150,8 @@
                     </div>
             
                     <span class="input-group-btn">
-                    	<button href="" type="submit" class="btn btn-primary btn-form display-4" ng-click="wishCtrl.authenticate('updating', wishCtrl.wish)">Submit</button>
+                    	<button href="" type="submit" class="btn btn-primary btn-form display-4" ng-click="wishCtrl.authenticate('updating', wishCtrl.wish)">Edit</button>
+                    	<button href="" type="submit" class="btn btn-primary btn-form display-4" ng-click="wishCtrl.authenticate('deleting', wishCtrl.wish)">Delete</button>
                     	<button href="" type="submit" class="btn btn-primary btn-form display-4" ng-click="wishCtrl.showEditForm=false">Close</button>
                    	</span>
                     
